@@ -1,0 +1,71 @@
+#!/usr/bin/env php
+<?php
+
+require 'vendor/autoload.php';
+
+use TencentCloud\Common\Credential;
+use TencentCloud\Common\Exception\TencentCloudSDKException;
+use TencentCloud\Ssl\V20191205\SslClient;
+use TencentCloud\Ssl\V20191205\Models\UpdateCertificateInstanceRequest;
+use TencentCloud\Ssl\V20191205\Models\DescribeCertificatesRequest;
+
+function getDomainCertificateId($domain)
+{
+    $cred   = new Credential(getenv('TX_SECRET_ID'), getenv('TX_SECRET_KEY'));
+    $client = new SslClient($cred, '');
+    $req = new DescribeCertificatesRequest();
+    $req->fromJsonString(json_encode([]));
+    $resp = $client->DescribeCertificates($req);
+
+    $content = json_decode($resp->toJsonString(), true);
+
+    $idList = [];
+    foreach ($content['Certificates'] as $item) {
+        if (!empty($domain) && $item['Domain'] !== $domain) {
+            continue;
+        }
+        if (!isset($idList[$item['Domain']])) {
+            $idList[$item['Domain']] = $item['CertificateId'];
+        }
+    }
+
+    return $idList;
+}
+
+$domain = $argv[1] ?? '';
+$sslConfig = include_once dirname(__FILE__) . '/config.php';
+
+if (!empty($domain) && !isset($sslConfig[$domain])) {
+    echo 'Domain config not found', PHP_EOL;
+    exit(1);
+}
+
+$domains = getDomainCertificateId($domain);
+
+foreach ($sslConfig as $domain => $config) {
+    if (!isset($domains[$domain])) {
+        continue;
+    }
+
+    try {
+        $cred   = new Credential(getenv('TX_SECRET_ID'), getenv('TX_SECRET_KEY'));
+        $client = new SslClient($cred, '');
+
+        $req = new UpdateCertificateInstanceRequest();
+
+        $params = array(
+            'OldCertificateId'           => $config['certificateId'],
+            'ResourceTypes'              => $config['resourceTypes'],
+            'CertificatePublicKey'       => file_get_contents($config['fullchain']),
+            'CertificatePrivateKey'      => file_get_contents($config['privkey']),
+            'ExpiringNotificationSwitch' => 1,
+            'Repeatable'                 => false
+        );
+        $req->fromJsonString(json_encode($params));
+        $resp = $client->UploadCertificate($req);
+
+        echo $resp->toJsonString(), PHP_EOL;
+    } catch (TencentCloudSDKException $e) {
+        echo $e;
+    }
+}

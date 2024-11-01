@@ -1,0 +1,15 @@
+{
+    "name": "sy-records/cert-manager",
+    "description": "Cert Manager",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Luffy",
+            "email": "lufei@simps.io"
+        }
+    ],
+    "require": {
+        "tencentcloud/ssl": "^3.0"
+    }
+}
