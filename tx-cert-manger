@@ -60,7 +60,7 @@ foreach ((array)$sslConfig as $domain => $config) {
         $req = new UpdateCertificateInstanceRequest();
 
         $params = array(
-            'OldCertificateId'           => $config['certificateId'],
+            'OldCertificateId'           => $domains[$domain],
             'ResourceTypes'              => $config['resourceTypes'],
             'CertificatePublicKey'       => file_get_contents($config['fullchain']),
             'CertificatePrivateKey'      => file_get_contents($config['privkey']),
@@ -72,6 +72,6 @@ foreach ((array)$sslConfig as $domain => $config) {
 
         echo $resp->toJsonString(), PHP_EOL;
     } catch (TencentCloudSDKException $e) {
-        echo $e;
+        echo $e, PHP_EOL;
     }
 }
