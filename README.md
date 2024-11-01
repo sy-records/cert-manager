@@ -32,4 +32,3 @@ chmod +x tx-cert-manger
 # 更新指定域名的证书
 ./tx-cert-manger example.com
 ```
-

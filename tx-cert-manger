@@ -33,7 +33,13 @@ function getDomainCertificateId($domain)
 }
 
 $domain = $argv[1] ?? '';
-$sslConfig = include_once dirname(__FILE__) . '/config.php';
+$configFile = dirname(__FILE__) . '/config.php';
+if (!file_exists($configFile)) {
+    echo 'Config file not found', PHP_EOL;
+    exit(1);
+}
+
+$sslConfig = include_once $configFile;
 
 if (!empty($domain) && !isset($sslConfig[$domain])) {
     echo 'Domain config not found', PHP_EOL;
@@ -42,7 +48,7 @@ if (!empty($domain) && !isset($sslConfig[$domain])) {
 
 $domains = getDomainCertificateId($domain);
 
-foreach ($sslConfig as $domain => $config) {
+foreach ((array)$sslConfig as $domain => $config) {
     if (!isset($domains[$domain])) {
         continue;
     }
