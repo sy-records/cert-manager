@@ -59,16 +59,16 @@ foreach ((array)$sslConfig as $domain => $config) {
 
         $req = new UpdateCertificateInstanceRequest();
 
-        $params = array(
+        $params = [
             'OldCertificateId'           => $domains[$domain],
             'ResourceTypes'              => $config['resourceTypes'],
             'CertificatePublicKey'       => file_get_contents($config['fullchain']),
             'CertificatePrivateKey'      => file_get_contents($config['privkey']),
             'ExpiringNotificationSwitch' => 1,
             'Repeatable'                 => false
-        );
+        ];
         $req->fromJsonString(json_encode($params));
-        $resp = $client->UploadCertificate($req);
+        $resp = $client->UpdateCertificateInstance($req);
 
         echo $resp->toJsonString(), PHP_EOL;
     } catch (TencentCloudSDKException $e) {
