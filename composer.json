@@ -1,7 +1,7 @@
 {
     "name": "sy-records/cert-manager",
     "description": "Cert Manager",
-    "type": "library",
+    "type": "project",
     "license": "MIT",
     "authors": [
         {
