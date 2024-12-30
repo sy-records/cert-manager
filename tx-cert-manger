@@ -8,6 +8,7 @@ use TencentCloud\Common\Exception\TencentCloudSDKException;
 use TencentCloud\Ssl\V20191205\SslClient;
 use TencentCloud\Ssl\V20191205\Models\UpdateCertificateInstanceRequest;
 use TencentCloud\Ssl\V20191205\Models\DescribeCertificatesRequest;
+use TencentCloud\Ssl\V20191205\Models\DeleteCertificateRequest;
 
 function getDomainCertificateId($domain)
 {
@@ -30,6 +31,20 @@ function getDomainCertificateId($domain)
     }
 
     return $idList;
+}
+
+function removeOldCertificate($certificateId)
+{
+    $cred = new Credential(getenv('TX_SECRET_ID'), getenv('TX_SECRET_KEY'));
+    $client = new SslClient($cred, '');
+    $req = new DeleteCertificateRequest();
+    $params = [
+        'CertificateId' => $certificateId,
+        'IsCheckResource' => true
+    ];
+    $req->fromJsonString(json_encode($params));
+    $resp = $client->DeleteCertificate($req);
+    return $resp->toJsonString();
 }
 
 $domain = $argv[1] ?? '';
@@ -71,6 +86,11 @@ foreach ((array)$sslConfig as $domain => $config) {
         $resp = $client->UpdateCertificateInstance($req);
 
         echo $resp->toJsonString(), PHP_EOL;
+
+        if ($config['removeOld']) {
+            echo 'Removing old certificate...', PHP_EOL;
+            echo removeOldCertificate($domains[$domain]), PHP_EOL;
+        }
     } catch (TencentCloudSDKException $e) {
         echo $e, PHP_EOL;
     }
