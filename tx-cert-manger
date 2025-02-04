@@ -22,6 +22,7 @@ function getDomainCertificateId($domain)
 
     $idList = [];
     foreach ($content['Certificates'] as $item) {
+        $item['Domain'] = str_replace('*.', '', $item['Domain']);
         if (!empty($domain) && $item['Domain'] !== $domain) {
             continue;
         }
@@ -90,6 +91,34 @@ foreach ((array)$sslConfig as $domain => $config) {
         if ($config['removeOld']) {
             echo 'Removing old certificate...', PHP_EOL;
             echo removeOldCertificate($domains[$domain]), PHP_EOL;
+        }
+
+        if (!empty($config['otherFullchain'])) {
+            $fullchain = file_get_contents($config['fullchain']);
+            foreach ($config['otherFullchain'] as $otherFullchain) {
+                $fullchain .= file_get_contents($otherFullchain);
+            }
+            file_put_contents($config['fullchain'], $fullchain);
+        }
+
+        if (!empty($config['otherPrivkey'])) {
+            $privkey = file_get_contents($config['privkey']);
+            foreach ($config['otherPrivkey'] as $otherPrivkey) {
+                $privkey .= file_get_contents($otherPrivkey);
+            }
+            file_put_contents($config['privkey'], $privkey);
+        }
+
+        if (!empty($config['copyFullchainTo'])) {
+            array_map(function ($path) use ($config) {
+                return copy($config['fullchain'], $path);
+            }, $config['copyFullchainTo']);
+        }
+
+        if (!empty($config['copyPrivkeyTo'])) {
+            array_map(function ($path) use ($config) {
+                return copy($config['privkey'], $path);
+            }, $config['copyPrivkeyTo']);
         }
     } catch (TencentCloudSDKException $e) {
         echo $e, PHP_EOL;
